@@ -168,10 +168,6 @@ For production deployment, consider:
 4. Test thoroughly
 5. Submit a pull request
 
-## 📝 License
-
-This project is open source and available under the [MIT License](LICENSE).
-
 ## 🆘 Support
 
 If you encounter any issues or have questions:
