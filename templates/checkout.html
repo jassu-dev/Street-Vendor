@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout - Street Vendors{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="fw-bold">Checkout</h1>
+            <p class="text-muted">Complete your purchase</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Order Items</h5>
+                    
+                    {% for item in cart_items %}
+                        <div class="row align-items-center mb-3 pb-3 border-bottom">
+                            <div class="col-md-2">
+                                {% if item.product.image_url %}
+                                    <img src="{{ item.product.image_url }}" class="img-fluid rounded" alt="{{ item.product.name }}">
+                                {% else %}
+                                    <div class="bg-secondary rounded d-flex align-items-center justify-content-center" style="height: 60px;">
+                                        <i class="fas fa-image text-white"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <h6 class="mb-1">{{ item.product.name }}</h6>
+                                <small class="text-muted">by {{ item.product.seller.username }}</small>
+                            </div>
+                            
+                            <div class="col-md-2">
+                                <span class="text-muted">Qty: {{ item.quantity }}</span>
+                            </div>
+                            
+                            <div class="col-md-2">
+                                <span class="fw-bold">${{ "%.2f"|format(item.product.price * item.quantity) }}</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Delivery Information</h5>
+                    <p class="text-muted">Please provide your delivery address for cash on delivery.</p>
+                    
+                    <form method="POST">
+                        <div class="mb-4">
+                            <label for="delivery_address" class="form-label">Delivery Address *</label>
+                            <textarea class="form-control" id="delivery_address" name="delivery_address" rows="4" required placeholder="Enter your complete delivery address including street, city, state, and postal code..."></textarea>
+                            <div class="form-text">This address will be used for delivery and billing.</div>
+                        </div>
+                        
+                        <div class="alert alert-success">
+                            <i class="fas fa-money-bill-wave me-2"></i>
+                            <strong>Cash on Delivery:</strong> Pay when you receive your order. No payment required now.
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-shopping-cart me-2"></i>Place Order (Cash on Delivery)
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Order Summary</h5>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <span>${{ "%.2f"|format(subtotal) }}</span>
+                    </div>
+                    {% if discount_amount > 0 %}
+                        <div class="d-flex justify-content-between mb-2 text-success">
+                            <span>Discount ({{ discount_percent }}%):</span>
+                            <span>-${{ "%.2f"|format(discount_amount) }}</span>
+                        </div>
+                    {% endif %}
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Shipping:</span>
+                        <span>Free</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tax:</span>
+                        <span>$0.00</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-4">
+                        <strong>Total:</strong>
+                        <strong class="text-primary">${{ "%.2f"|format(total) }}</strong>
+                    </div>
+                    
+                    {% if applied_coupon %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-tag me-2"></i>
+                            <strong>Coupon Applied:</strong> {{ applied_coupon.code }} ({{ discount_percent }}% off)
+                        </div>
+                    {% endif %}
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-money-bill-wave me-2"></i>
+                        <strong>Payment Method:</strong> Cash on Delivery
+                    </div>
+                    
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Free shipping on all orders!
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Shopping Cart - Street Vendors{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="fw-bold">Shopping Cart</h1>
+            <p class="text-muted">Review your items before checkout</p>
+        </div>
+    </div>
+
+    {% if cart_items %}
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">Cart Items ({{ cart_items|length }})</h5>
+                        
+                        {% for item in cart_items %}
+                            <div class="row align-items-center mb-4 pb-4 border-bottom">
+                                <div class="col-md-2">
+                                    {% if item.product.image_url %}
+                                        <img src="{{ item.product.image_url }}" class="img-fluid rounded" alt="{{ item.product.name }}">
+                                    {% else %}
+                                        <div class="bg-secondary rounded d-flex align-items-center justify-content-center" style="height: 80px;">
+                                            <i class="fas fa-image text-white"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <h6 class="mb-1">{{ item.product.name }}</h6>
+                                    <p class="text-muted mb-1">{{ item.product.category }}</p>
+                                    <small class="text-muted">by {{ item.product.seller.username }}</small>
+                                </div>
+                                
+                                <div class="col-md-2">
+                                    <span class="fw-bold text-primary">${{ "%.2f"|format(item.product.price) }}</span>
+                                </div>
+                                
+                                <div class="col-md-2">
+                                    <span class="badge bg-secondary">{{ item.quantity }}</span>
+                                </div>
+                                
+                                <div class="col-md-2">
+                                    <span class="fw-bold">${{ "%.2f"|format(item.product.price * item.quantity) }}</span>
+                                </div>
+                                
+                                <div class="col-12 mt-2">
+                                    <a href="{{ url_for('remove_from_cart', cart_id=item.id) }}" class="btn btn-outline-danger btn-sm" onclick="return confirm('Remove this item from cart?')">
+                                        <i class="fas fa-trash me-1"></i>Remove
+                                    </a>
+                                    <a href="{{ url_for('product_detail', product_id=item.product.id) }}" class="btn btn-outline-primary btn-sm ms-2">
+                                        <i class="fas fa-eye me-1"></i>View
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">Order Summary</h5>
+                        
+                        <!-- Coupon Code Section -->
+                        <div class="mb-3">
+                            {% if applied_coupon %}
+                                <div class="alert alert-success">
+                                    <i class="fas fa-tag me-2"></i>
+                                    <strong>Coupon Applied:</strong> {{ applied_coupon.code }} ({{ discount_percent }}% off)
+                                    <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="removeCoupon()">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            {% else %}
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="couponCode" placeholder="Enter coupon code">
+                                    <button class="btn btn-outline-primary" type="button" onclick="applyCoupon()">
+                                        <i class="fas fa-tag"></i>
+                                    </button>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <span>${{ "%.2f"|format(subtotal) }}</span>
+                        </div>
+                        {% if discount_amount > 0 %}
+                            <div class="d-flex justify-content-between mb-2 text-success">
+                                <span>Discount ({{ discount_percent }}%):</span>
+                                <span>-${{ "%.2f"|format(discount_amount) }}</span>
+                            </div>
+                        {% endif %}
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Shipping:</span>
+                            <span>Free</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-4">
+                            <strong>Total:</strong>
+                            <strong class="text-primary">${{ "%.2f"|format(total) }}</strong>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('checkout') }}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-credit-card me-2"></i>Proceed to Checkout
+                            </a>
+                            <a href="{{ url_for('products') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-shopping-bag me-2"></i>Continue Shopping
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-shopping-cart fa-4x text-muted mb-4"></i>
+            <h3>Your Cart is Empty</h3>
+            <p class="text-muted mb-4">Add some products to your cart to get started.</p>
+            <a href="{{ url_for('products') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-shopping-bag me-2"></i>Browse Products
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function applyCoupon() {
+    const couponCode = document.getElementById('couponCode').value.trim();
+    if (!couponCode) {
+        alert('Please enter a coupon code');
+        return;
+    }
+    
+    fetch('{{ url_for("apply_coupon") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `coupon_code=${encodeURIComponent(couponCode)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error applying coupon');
+    });
+}
+
+function removeCoupon() {
+    fetch('{{ url_for("remove_coupon") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error removing coupon');
+    });
+}
+</script>
+{% endblock %} 

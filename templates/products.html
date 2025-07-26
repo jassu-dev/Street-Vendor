@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Products - Street Vendors{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="fw-bold">All Products</h1>
+            <p class="text-muted">Find the perfect materials for your projects</p>
+        </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <form method="GET" class="d-flex">
+                <input type="text" class="form-control me-2" name="search" placeholder="Search products..." value="{{ search }}">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+        </div>
+        <div class="col-md-4">
+            <select class="form-select" onchange="window.location.href='{{ url_for('products') }}?category=' + this.value + '&search={{ search }}'">
+                <option value="">All Categories</option>
+                {% for category in categories %}
+                    <option value="{{ category[0] }}" {% if selected_category == category[0] %}selected{% endif %}>
+                        {{ category[0] }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="row g-4">
+        {% if products %}
+            {% for product in products %}
+                <div class="col-lg-3 col-md-6">
+                    <div class="card product-card h-100">
+                        {% if product.image_url %}
+                            <img src="{{ product.image_url }}" class="card-img-top product-image" alt="{{ product.name }}">
+                        {% else %}
+                            <div class="card-img-top product-image bg-secondary d-flex align-items-center justify-content-center">
+                                <i class="fas fa-image fa-3x text-white"></i>
+                            </div>
+                        {% endif %}
+                        <div class="card-body d-flex flex-column">
+                            <span class="category-badge">{{ product.category }}</span>
+                            <h5 class="card-title mt-2">{{ product.name }}</h5>
+                            <p class="card-text text-muted flex-grow-1">{{ product.description[:100] }}{% if product.description|length > 100 %}...{% endif %}</p>
+                            
+                            <!-- Rating Display -->
+                            {% if product.reviews %}
+                                <div class="mb-2">
+                                    {% set avg_rating = (product.reviews|sum(attribute='rating') / product.reviews|length)|round(1) %}
+                                    <div class="d-flex align-items-center">
+                                        {% for i in range(5) %}
+                                            {% if i < avg_rating|int %}
+                                                <i class="fas fa-star text-warning" style="font-size: 0.8rem;"></i>
+                                            {% elif avg_rating - i >= 0.5 %}
+                                                <i class="fas fa-star-half-alt text-warning" style="font-size: 0.8rem;"></i>
+                                            {% else %}
+                                                <i class="far fa-star text-warning" style="font-size: 0.8rem;"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <small class="text-muted ms-1">({{ product.reviews|length }})</small>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="d-flex justify-content-between align-items-center mt-auto">
+                                <span class="fw-bold text-primary">${{ "%.2f"|format(product.price) }}</span>
+                                <small class="text-muted">Stock: {{ product.quantity }}</small>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <small class="text-muted">by {{ product.seller.username }}</small>
+                                <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-primary btn-sm">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                <h4>No products found</h4>
+                <p class="text-muted">
+                    {% if search or selected_category %}
+                        No products match your search criteria. Try adjusting your filters.
+                    {% else %}
+                        No products available yet. Be the first to add products!
+                    {% endif %}
+                </p>
+                {% if session.user_id and session.user_type == 'seller' %}
+                    <a href="{{ url_for('add_product') }}" class="btn btn-primary">Add Your First Product</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Results Summary -->
+    {% if products %}
+        <div class="row mt-4">
+            <div class="col-12">
+                <p class="text-muted">
+                    Showing {{ products|length }} product{% if products|length != 1 %}s{% endif %}
+                    {% if search %} for "{{ search }}"{% endif %}
+                    {% if selected_category %} in {{ selected_category }}{% endif %}
+                </p>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 

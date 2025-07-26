@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} - Street Vendors{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Product Image -->
+        <div class="col-md-6 mb-4">
+            {% if product.image_url %}
+                <img src="{{ product.image_url }}" class="img-fluid rounded" alt="{{ product.name }}">
+            {% else %}
+                <div class="bg-secondary rounded d-flex align-items-center justify-content-center" style="height: 400px;">
+                    <i class="fas fa-image fa-5x text-white"></i>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Product Details -->
+        <div class="col-md-6">
+            <span class="category-badge">{{ product.category }}</span>
+            <h1 class="fw-bold mt-2">{{ product.name }}</h1>
+            <p class="text-muted">by {{ product.seller.username }}</p>
+            
+            <div class="mb-4">
+                <h2 class="text-primary fw-bold">${{ "%.2f"|format(product.price) }}</h2>
+                <p class="text-muted">
+                    {% if product.quantity > 0 %}
+                        <i class="fas fa-check-circle text-success me-2"></i>In Stock ({{ product.quantity }} available)
+                    {% else %}
+                        <i class="fas fa-times-circle text-danger me-2"></i>Out of Stock
+                    {% endif %}
+                </p>
+            </div>
+
+            <div class="mb-4">
+                <h5>Description</h5>
+                <p>{{ product.description }}</p>
+            </div>
+
+            {% if session.user_id and session.user_type == 'buyer' and product.quantity > 0 %}
+                <form method="POST" action="{{ url_for('add_to_cart', product_id=product.id) }}" class="mb-4">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label for="quantity" class="form-label">Quantity</label>
+                            <input type="number" class="form-control" id="quantity" name="quantity" value="1" min="1" max="{{ product.quantity }}" required>
+                        </div>
+                        <div class="col-md-8 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary btn-lg w-100">
+                                <i class="fas fa-cart-plus me-2"></i>Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            {% elif not session.user_id %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Please <a href="{{ url_for('login') }}" class="alert-link">login</a> to add items to your cart.
+                </div>
+            {% elif session.user_type == 'seller' %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Sellers cannot purchase products. Switch to a buyer account to make purchases.
+                </div>
+            {% elif product.quantity == 0 %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-times-circle me-2"></i>
+                    This product is currently out of stock.
+                </div>
+            {% endif %}
+
+            <div class="card">
+                <div class="card-body">
+                    <h6><i class="fas fa-info-circle me-2"></i>Product Information</h6>
+                    <ul class="list-unstyled">
+                        <li><strong>Category:</strong> {{ product.category }}</li>
+                        <li><strong>Seller:</strong> {{ product.seller.username }}</li>
+                        <li><strong>Added:</strong> {{ product.created_at.strftime('%B %d, %Y') }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviews Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3 class="fw-bold mb-4">Customer Reviews</h3>
+            
+            {% if product.reviews %}
+                <div class="mb-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <h5 class="mb-0 me-3">Average Rating:</h5>
+                        <div class="d-flex align-items-center">
+                            {% set avg_rating = (product.reviews|sum(attribute='rating') / product.reviews|length)|round(1) %}
+                            {% for i in range(5) %}
+                                {% if i < avg_rating|int %}
+                                    <i class="fas fa-star text-warning"></i>
+                                {% elif avg_rating - i >= 0.5 %}
+                                    <i class="fas fa-star-half-alt text-warning"></i>
+                                {% else %}
+                                    <i class="far fa-star text-warning"></i>
+                                {% endif %}
+                            {% endfor %}
+                            <span class="ms-2 fw-bold">{{ avg_rating }}/5</span>
+                            <span class="ms-2 text-muted">({{ product.reviews|length }} reviews)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                {% for review in product.reviews|sort(attribute='created_at', reverse=true) %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h6 class="mb-1">{{ review.user.username }}</h6>
+                                    <div class="d-flex align-items-center">
+                                        {% for i in range(5) %}
+                                            {% if i < review.rating %}
+                                                <i class="fas fa-star text-warning"></i>
+                                            {% else %}
+                                                <i class="far fa-star text-warning"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <small class="text-muted ms-2">{{ review.created_at.strftime('%B %d, %Y') }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="mb-0">{{ review.comment }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-star fa-3x text-muted mb-3"></i>
+                    <h5>No reviews yet</h5>
+                    <p class="text-muted">Be the first to review this product!</p>
+                </div>
+            {% endif %}
+            
+            <!-- Add Review Form -->
+            {% if session.user_id and session.user_type == 'buyer' %}
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Write a Review</h5>
+                        <form method="POST" action="{{ url_for('add_review', product_id=product.id) }}">
+                            <div class="mb-3">
+                                <label class="form-label">Rating</label>
+                                <div class="rating-input">
+                                    <input type="radio" name="rating" value="5" id="star5" required>
+                                    <label for="star5" class="star-label">
+                                        <i class="far fa-star"></i>
+                                    </label>
+                                    <input type="radio" name="rating" value="4" id="star4" required>
+                                    <label for="star4" class="star-label">
+                                        <i class="far fa-star"></i>
+                                    </label>
+                                    <input type="radio" name="rating" value="3" id="star3" required>
+                                    <label for="star3" class="star-label">
+                                        <i class="far fa-star"></i>
+                                    </label>
+                                    <input type="radio" name="rating" value="2" id="star2" required>
+                                    <label for="star2" class="star-label">
+                                        <i class="far fa-star"></i>
+                                    </label>
+                                    <input type="radio" name="rating" value="1" id="star1" required>
+                                    <label for="star1" class="star-label">
+                                        <i class="far fa-star"></i>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="comment" class="form-label">Comment</label>
+                                <textarea class="form-control" id="comment" name="comment" rows="3" required placeholder="Share your experience with this product..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Submit Review</button>
+                        </form>
+                    </div>
+                </div>
+            {% elif not session.user_id %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Please <a href="{{ url_for('login') }}" class="alert-link">login</a> to write a review.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Related Products Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3 class="fw-bold mb-4">More from this seller</h3>
+            <div class="row g-4">
+                {% for related_product in product.seller.products[:4] %}
+                    {% if related_product.id != product.id %}
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card product-card h-100">
+                                {% if related_product.image_url %}
+                                    <img src="{{ related_product.image_url }}" class="card-img-top product-image" alt="{{ related_product.name }}">
+                                {% else %}
+                                    <div class="card-img-top product-image bg-secondary d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-image fa-3x text-white"></i>
+                                    </div>
+                                {% endif %}
+                                <div class="card-body d-flex flex-column">
+                                    <span class="category-badge">{{ related_product.category }}</span>
+                                    <h6 class="card-title mt-2">{{ related_product.name }}</h6>
+                                    <p class="card-text text-muted flex-grow-1">{{ related_product.description[:80] }}{% if related_product.description|length > 80 %}...{% endif %}</p>
+                                    <div class="d-flex justify-content-between align-items-center mt-auto">
+                                        <span class="fw-bold text-primary">${{ "%.2f"|format(related_product.price) }}</span>
+                                        <a href="{{ url_for('product_detail', product_id=related_product.id) }}" class="btn btn-primary btn-sm">View</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.rating-input {
+    display: flex;
+    gap: 5px;
+}
+
+.rating-input input[type="radio"] {
+    display: none;
+}
+
+.star-label {
+    cursor: pointer;
+    font-size: 1.5rem;
+    color: #ddd;
+    transition: color 0.2s;
+}
+
+/* Hover effects - when hovering over a star, color it and all previous stars */
+.rating-input .star-label:hover,
+.rating-input .star-label:hover ~ .star-label {
+    color: #ffc107;
+}
+
+.rating-input .star-label:hover i,
+.rating-input .star-label:hover ~ .star-label i {
+    color: #ffc107;
+}
+
+/* Selected state - when a radio is checked, color it and all previous stars */
+.rating-input input[type="radio"]:checked ~ .star-label {
+    color: #ffc107;
+}
+
+.rating-input input[type="radio"]:checked ~ .star-label i {
+    color: #ffc107;
+}
+</style>
+{% endblock %} 

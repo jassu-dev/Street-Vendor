@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Street Vendors{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-user-circle fa-5x text-primary"></i>
+                    </div>
+                    <h4 class="fw-bold">{{ user.username }}</h4>
+                    <p class="text-muted">{{ user.email }}</p>
+                    <span class="badge {% if user.user_type == 'seller' %}bg-success{% else %}bg-primary{% endif %}">
+                        {{ user.user_type.title() }}
+                    </span>
+                    <p class="text-muted mt-2">Member since {{ user.created_at.strftime('%B %Y') }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Account Information</h5>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Username:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            {{ user.username }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Email:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            {{ user.email }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Account Type:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            <span class="badge {% if user.user_type == 'seller' %}bg-success{% else %}bg-primary{% endif %}">
+                                {{ user.user_type.title() }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Member Since:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            {{ user.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {% if user.user_type == 'seller' %}
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">Seller Statistics</h5>
+                        
+                        <div class="row text-center">
+                            <div class="col-md-4">
+                                <h4 class="text-primary">{{ user.products|length }}</h4>
+                                <p class="text-muted">Products Listed</p>
+                            </div>
+                            <div class="col-md-4">
+                                <h4 class="text-success">{{ user.products|selectattr('quantity', 'gt', 0)|list|length }}</h4>
+                                <p class="text-muted">In Stock</p>
+                            </div>
+                            <div class="col-md-4">
+                                <h4 class="text-info">{{ user.products|sum(attribute='price')|round(2) }}</h4>
+                                <p class="text-muted">Total Value</p>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 mt-3">
+                            <a href="{{ url_for('my_products') }}" class="btn btn-primary">
+                                <i class="fas fa-box me-2"></i>Manage Products
+                            </a>
+                            <a href="{{ url_for('add_product') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-plus me-2"></i>Add New Product
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">Buyer Statistics</h5>
+                        
+                        <div class="row text-center">
+                            <div class="col-md-4">
+                                <h4 class="text-primary">{{ user.orders|length }}</h4>
+                                <p class="text-muted">Total Orders</p>
+                            </div>
+                            <div class="col-md-4">
+                                <h4 class="text-success">{{ user.orders|selectattr('status', 'eq', 'delivered')|list|length }}</h4>
+                                <p class="text-muted">Completed</p>
+                            </div>
+                            <div class="col-md-4">
+                                <h4 class="text-info">{{ "%.2f"|format(user.orders|sum(attribute='total_price')) }}</h4>
+                                <p class="text-muted">Total Spent</p>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 mt-3">
+                            <a href="{{ url_for('my_orders') }}" class="btn btn-primary">
+                                <i class="fas fa-shopping-bag me-2"></i>View Orders
+                            </a>
+                            <a href="{{ url_for('products') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-search me-2"></i>Browse Products
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Account Actions</h5>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('edit_profile') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-edit me-2"></i>Edit Profile
+                        </a>
+                        <a href="{{ url_for('change_password') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-key me-2"></i>Change Password
+                        </a>
+                        <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
