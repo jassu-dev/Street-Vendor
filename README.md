@@ -171,10 +171,6 @@ For production deployment, consider:
 4. Test thoroughly
 5. Submit a pull request
 
-## 📝 License
-
-This project is open source and available under the [MIT License](LICENSE).
-
 ## 🆘 Support
 
 If you encounter any issues or have questions:
@@ -201,4 +197,8 @@ If you encounter any issues or have questions:
 
 ---
 
+<<<<<<< HEAD
 **Built with ❤️ for the street vendor community**
+=======
+**Built with ❤️ for the street vendor community** 
+>>>>>>> c5edf48e33713bcd0f731aabf5f591588283e751
