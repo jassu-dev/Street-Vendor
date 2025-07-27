@@ -201,4 +201,3 @@ If you encounter any issues or have questions:
 **Built with ❤️ for the street vendor community**
 =======
 **Built with ❤️ for the street vendor community** 
->>>>>>> c5edf48e33713bcd0f731aabf5f591588283e751
