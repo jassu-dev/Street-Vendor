@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Start Conversation - Street Vendors{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="fw-bold">Start Conversation</h1>
+            <p class="text-muted">Send a message to {{ other_user.username }}</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{{ url_for('messages') }}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Messages
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                            <span class="fw-bold">{{ other_user.username[0] | upper }}</span>
+                        </div>
+                        <div>
+                            <h5 class="mb-0">{{ other_user.username }}</h5>
+                            <small class="text-muted">{{ other_user.email }}</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('start_conversation', user_id=other_user.id) }}">
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Your Message</label>
+                            <textarea class="form-control" id="message" name="message" rows="4" placeholder="Type your message here..." required></textarea>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i>Send Message
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

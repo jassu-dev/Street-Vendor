@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Conversation - Street Vendors{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="fw-bold">Conversation with {{ other_user.username }}</h1>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{{ url_for('messages') }}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Messages
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                            <span class="fw-bold">{{ other_user.username[0] | upper }}</span>
+                        </div>
+                        <div>
+                            <h5 class="mb-0">{{ other_user.username }}</h5>
+                            <small class="text-muted">{{ other_user.email }}</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body" id="message-container" style="height: 400px; overflow-y: auto;">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="d-flex mb-3 {% if message.sender_id == current_user_id %}justify-content-end{% endif %}">
+                                {% if message.sender_id != current_user_id %}
+                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; flex-shrink: 0;">
+                                        <span class="small">{{ other_user.username[0] | upper }}</span>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="{% if message.sender_id == current_user_id %}bg-primary text-white{% else %}bg-light{% endif %} rounded p-3" style="max-width: 75%;">
+                                    <p class="mb-1">{{ message.content }}</p>
+                                    <small class="{% if message.sender_id == current_user_id %}text-white-50{% else %}text-muted{% endif %} d-block text-end">
+                                        {{ message.created_at.strftime('%H:%M') }}
+                                    </small>
+                                </div>
+                                
+                                {% if message.sender_id == current_user_id %}
+                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center ms-2" style="width: 32px; height: 32px; flex-shrink: 0;">
+                                        <span class="small">You</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                            <h5>No messages yet</h5>
+                            <p class="text-muted">Start the conversation by sending a message below</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="card-footer bg-white">
+                    <form id="message-form" class="d-flex">
+                        <input type="hidden" id="conversation-id" value="{{ conversation.id }}">
+                        <input type="text" id="message-input" class="form-control me-2" placeholder="Type your message..." required>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Connect to Socket.IO server
+        const socket = io();
+        const conversationId = document.getElementById('conversation-id').value;
+        const messageContainer = document.getElementById('message-container');
+        const messageForm = document.getElementById('message-form');
+        const messageInput = document.getElementById('message-input');
+        const currentUserId = {{ current_user_id }};
+        
+        // Scroll to bottom of message container
+        function scrollToBottom() {
+            messageContainer.scrollTop = messageContainer.scrollHeight;
+        }
+        
+        // Scroll to bottom on page load
+        scrollToBottom();
+        
+        // Join the conversation room
+        socket.on('connect', function() {
+            socket.emit('join', {conversation_id: conversationId});
+        });
+        
+        // Listen for new messages
+        socket.on('new_message', function(data) {
+            const isCurrentUser = data.sender_id === currentUserId;
+            
+            // Create message element
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `d-flex mb-3 ${isCurrentUser ? 'justify-content-end' : ''}`;
+            
+            // Create avatar for other user
+            if (!isCurrentUser) {
+                const avatar = document.createElement('div');
+                avatar.className = 'bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2';
+                avatar.style.width = '32px';
+                avatar.style.height = '32px';
+                avatar.style.flexShrink = '0';
+                
+                const avatarText = document.createElement('span');
+                avatarText.className = 'small';
+                avatarText.textContent = '{{ other_user.username[0] | upper }}';
+                
+                avatar.appendChild(avatarText);
+                messageDiv.appendChild(avatar);
+            }
+            
+            // Create message bubble
+            const messageBubble = document.createElement('div');
+            messageBubble.className = isCurrentUser ? 'bg-primary text-white rounded p-3' : 'bg-light rounded p-3';
+            messageBubble.style.maxWidth = '75%';
+            
+            const messageContent = document.createElement('p');
+            messageContent.className = 'mb-1';
+            messageContent.textContent = data.content;
+            
+            const messageTime = document.createElement('small');
+            messageTime.className = isCurrentUser ? 'text-white-50 d-block text-end' : 'text-muted d-block text-end';
+            
+            // Format the timestamp
+            const timestamp = new Date(data.timestamp);
+            messageTime.textContent = timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            messageBubble.appendChild(messageContent);
+            messageBubble.appendChild(messageTime);
+            messageDiv.appendChild(messageBubble);
+            
+            // Create avatar for current user
+            if (isCurrentUser) {
+                const avatar = document.createElement('div');
+                avatar.className = 'bg-primary text-white rounded-circle d-flex align-items-center justify-content-center ms-2';
+                avatar.style.width = '32px';
+                avatar.style.height = '32px';
+                avatar.style.flexShrink = '0';
+                
+                const avatarText = document.createElement('span');
+                avatarText.className = 'small';
+                avatarText.textContent = 'You';
+                
+                avatar.appendChild(avatarText);
+                messageDiv.appendChild(avatar);
+            }
+            
+            // Add message to container
+            messageContainer.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            scrollToBottom();
+        });
+        
+        // Send message
+        messageForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const message = messageInput.value.trim();
+            if (message) {
+                socket.emit('send_message', {
+                    conversation_id: conversationId,
+                    message: message
+                });
+                
+                messageInput.value = '';
+            }
+        });
+        
+        // Clean up when leaving the page
+        window.addEventListener('beforeunload', function() {
+            socket.emit('leave', {conversation_id: conversationId});
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

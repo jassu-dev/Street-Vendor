@@ -22,13 +22,15 @@ A beautiful and modern ecommerce website built with Flask, designed specifically
 - **Seller Dashboard**: Comprehensive overview of business metrics
 
 ### General Features
-- **User Authentication**: Secure login and registration system
+- **User Authentication**: Secure login and registration system with password recovery
 - **Profile Management**: Edit profile information and change passwords
 - **Product Reviews**: Star-based rating system with user comments
 - **Advanced Search**: Multi-criteria search with filters and sorting
 - **Responsive Design**: Beautiful UI that works on all devices
 - **Real-time Updates**: Live inventory and order status updates
 - **Modern UI**: Clean, professional design with Bootstrap 5
+- **Real-time Chat**: Instant messaging between buyers and sellers
+- **Order Management**: Enhanced order tracking with detailed view and cancellation options
 
 ## 🛠️ Technology Stack
 
@@ -38,6 +40,7 @@ A beautiful and modern ecommerce website built with Flask, designed specifically
 - **UI Framework**: Bootstrap 5
 - **Icons**: Font Awesome 6
 - **Authentication**: Flask-SQLAlchemy with password hashing
+- **Real-time Communication**: Flask-SocketIO for instant messaging
 
 ## 📋 Prerequisites
 
@@ -185,8 +188,10 @@ If you encounter any issues or have questions:
 - [x] Advanced search filters
 - [x] Profile management
 - [x] Password change functionality
+- [x] Password recovery functionality
+- [x] Real-time chat between buyers and sellers
+- [x] Enhanced order management and tracking
 - [ ] Payment gateway integration
-- [ ] Real-time chat between buyers and sellers
 - [ ] Mobile app development
 - [ ] Multi-language support
 - [ ] Advanced analytics dashboard
@@ -196,4 +201,4 @@ If you encounter any issues or have questions:
 
 ---
 
-**Built with ❤️ for the street vendor community** 
+**Built with ❤️ for the street vendor community**
