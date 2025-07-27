@@ -1087,5 +1087,4 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         init_coupons()
-    socketio.run(debug=False, allow_unsafe_werkzeug=True)
-    app.run(debug=False, allow_unsafe_werkzeug=True)
+    socketio.run(app,debug=False, allow_unsafe_werkzeug=True)
