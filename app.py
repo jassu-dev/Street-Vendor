@@ -1082,9 +1082,11 @@ def init_coupons():
             db.session.add(coupon)
         db.session.commit()
         print("Default coupon codes initialized!")
-
 if __name__ == '__main__':
+    import os
+    port = int(os.environ.get('PORT', 5000))  # Use PORT env var if available, else 5000
     with app.app_context():
         db.create_all()
         init_coupons()
-    socketio.run(app,debug=False, allow_unsafe_werkzeug=True)
+    socketio.run(app, host='0.0.0.0', port=port)
+# ...existing code...
